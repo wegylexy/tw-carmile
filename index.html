@@ -12,13 +12,24 @@
         body,
         select,
         input,
-        button {
+        button,
+        a {
             background-color: #333;
             color: #ccc;
         }
 
         [name=plateNo] {
             text-transform: uppercase;
+        }
+
+        td {
+            text-align: right;
+            font-weight: bold;
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        td:first-child:last-child {
+            text-align: center;
         }
 
         @media (orientation: portrait) {
@@ -82,7 +93,8 @@
         </tbody>
     </table>
     <hr>
-    <small>&copy; 2024 添美網事業。保留所有權利。<br>免責聲明：資料由第三方提供，不受任何保障。</small>
+    <small>&copy; 2024 <a target="timmywong" href="https://timmywong.tw" title="營業人統一編號：92704370">添美網事業</a>。保留所有權利。<br>
+        免責聲明：資料由第三方提供，不受任何保障。</small>
     <script>
         const years = document.getElementsByName("year")[0], y = new Date().getFullYear() - 1911;
         for (let i = y - 65; i <= y; ++i) {
@@ -94,8 +106,7 @@
             }
             years.appendChild(option);
         }
-        const q = document.forms.namedItem("carMileQuery");
-        q.addEventListener("submit", async function (ev) {
+        document.forms.namedItem("carMileQuery").addEventListener("submit", async function (ev) {
             ev.preventDefault();
             const carMileResults = document.getElementById("carMileResults");
             try {
@@ -106,16 +117,14 @@
                     body: JSON.stringify(new FormData(this).entries().reduce((d, p) => Object.assign(d, { [p[0]]: p[1].toUpperCase() }), {}))
                 }), { success, errorCode, errorMessage, result } = await r.json();
                 if (success) {
-                    function c(d) {
-                        let { groups: { year, month, day } } = d.match(/^(?<year>\d{2,3})(?<month>\d{2})(?<day>\d{2})$/);
-                        return `${parseInt(year) + 1911}-${month}-${day}`;
-                    }
-                    carMileResults.innerHTML = result.list.map(({ mile, inspDt }) => `<tr><td>${c(inspDt)}</td><td>${mile}</td></tr>`).join("");
+                    carMileResults.innerHTML = result.list.map(({ mile, inspDt }) =>
+                        `<tr><td>${inspDt.replace(/^(?<year>\d{2,3})(?<month>\d{2})(?<day>\d{2})$/,
+                            (_, y, m, d) => [parseInt(y) + 1911, m, d].join("-"))}</td><td>${mile}</td></tr>`).join("");
                 } else {
-                    carMileResults.innerHTML = `<tr><td colspan="2">${errorMessage || "不明錯誤。"}</td></tr>`;
+                    carMileResults.children[0].children[0].textContent = errorMessage || "不明錯誤。";
                 }
             } catch (e) {
-                carMileResults.innerHTML = `<tr><td colspan="2">無法查詢。</td></tr>`;
+                carMileResults.children[0].children[0].textContent = "無法查詢。";
             }
         });
     </script>
